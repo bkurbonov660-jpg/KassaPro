@@ -1,0 +1,49 @@
+name: Build KassaPro APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Save custom sources
+      run: |
+        cp -r lib /tmp/my_lib
+        cp pubspec.yaml /tmp/my_pubspec.yaml
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+
+    - name: Create Android project
+      run: flutter create --overwrite --org com.kassapro --project-name kassapro .
+
+    - name: Patch Kotlin and CompileSDK
+      run: |
+        sed -i -E 's/id "org.jetbrains.kotlin.android" version .*/id "org.jetbrains.kotlin.android" version "1.9.24" apply false/g' android/settings.gradle || true
+        sed -i -E 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.24"/g' android/build.gradle || true
+        sed -i -E 's/compileSdk = .*/compileSdk = 34/g' android/app/build.gradle || true
+
+    - name: Restore custom sources
+      run: |
+        cp -r /tmp/my_lib/* lib/
+        cp /tmp/my_pubspec.yaml pubspec.yaml
+
+    - name: Install dependencies
+      run: flutter pub get
+
+    - name: Build Release APK
+      run: flutter build apk --release
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: KassaPro-v4.0-APK
+        path: build/app/outputs/flutter-apk/app-release.apk
