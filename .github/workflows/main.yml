@@ -1,0 +1,167 @@
+name: Build Release APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Save custom sources
+      run: |
+        cp -r lib /tmp/my_lib
+        cp pubspec.yaml /tmp/my_pubspec.yaml
+        mkdir -p /tmp/assets/icon
+        cp assets/icon/app_icon.png /tmp/assets/icon/app_icon.png
+
+    - name: Setup Java 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+
+    - name: Create Android project
+      run: flutter create --overwrite --org com.sisms.photo --project-name sisms_photo .
+
+    - name: Fix Kotlin/AGP version and set NDK 27
+      run: |
+        cat << 'GRADLE' > android/build.gradle
+        buildscript {
+            ext.kotlin_version = '2.1.0'
+            repositories {
+                google()
+                mavenCentral()
+            }
+            dependencies {
+                classpath 'com.android.tools.build:gradle:8.7.0'
+                classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+            }
+        }
+        allprojects {
+            repositories {
+                google()
+                mavenCentral()
+            }
+        }
+        rootProject.buildDir = '../build'
+        subprojects {
+            project.buildDir = "${rootProject.buildDir}/${project.name}"
+        }
+        subprojects {
+            project.evaluationDependsOn(':app')
+        }
+        tasks.register("clean", Delete) {
+            delete rootProject.buildDir
+        }
+        GRADLE
+
+        cat << 'SETTINGS' > android/settings.gradle
+        pluginManagement {
+            def flutterSdkPath = {
+                def properties = new Properties()
+                file("local.properties").withInputStream { properties.load(it) }
+                def flutterSdkPath = properties.getProperty("flutter.sdk")
+                assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
+                return flutterSdkPath
+            }()
+            includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
+            repositories {
+                google()
+                mavenCentral()
+                gradlePluginPortal()
+            }
+        }
+        plugins {
+            id "dev.flutter.flutter-plugin-loader" version "1.0.0"
+            id "com.android.application" version "8.7.0" apply false
+            id "org.jetbrains.kotlin.android" version "2.1.0" apply false
+        }
+        include ":app"
+        SETTINGS
+
+        cat << 'PROPS' > android/gradle.properties
+        org.gradle.jvmargs=-Xmx4G
+        android.useAndroidX=true
+        android.enableJetifier=true
+        kotlin.version=2.1.0
+        android.nonTransitiveRClass=true
+        PROPS
+
+        cat << 'WRAPPER' > android/gradle/wrapper/gradle-wrapper.properties
+        distributionBase=GRADLE_USER_HOME
+        distributionPath=wrapper/dists
+        distributionUrl=https\://services.gradle.org/distributions/gradle-8.9-all.zip
+        zipStoreBase=GRADLE_USER_HOME
+        zipStorePath=wrapper/dists
+        WRAPPER
+
+    - name: Restore custom sources
+      run: |
+        cp -r /tmp/my_lib/* lib/
+        cp /tmp/my_pubspec.yaml pubspec.yaml
+        mkdir -p assets/icon
+        cp /tmp/assets/icon/app_icon.png assets/icon/app_icon.png
+
+    - name: Decode Keystore
+      run: echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > android/app/upload-keystore.jks
+
+    - name: Create key.properties
+      run: |
+        echo "storePassword=${{ secrets.KEY_STORE_PASSWORD }}" > android/key.properties
+        echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
+        echo "keyAlias=${{ secrets.ALIAS }}" >> android/key.properties
+        echo "storeFile=upload-keystore.jks" >> android/key.properties
+
+    - name: Install dependencies
+      run: flutter pub get
+
+    - name: Generate App Icons
+      run: flutter pub run flutter_launcher_icons
+
+    - name: Configure AndroidManifest
+      run: |
+        sed -i 's/android:label=".*"/android:label="Sisms Photo"/' android/app/src/main/AndroidManifest.xml
+        sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml
+        sed -i '/<application/i \    <uses-permission android:name="android.permission.CAMERA" />' android/app/src/main/AndroidManifest.xml
+        sed -i '/<application/i \    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />' android/app/src/main/AndroidManifest.xml
+        sed -i '/<application/i \    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />' android/app/src/main/AndroidManifest.xml
+        sed -i '/<manifest/a \    <queries>\n        <intent><action android:name="android.intent.action.VIEW" /><data android:scheme="https" /></intent>\n        <intent><action android:name="android.intent.action.VIEW" /><data android:scheme="mailto" /></intent>\n    </queries>' android/app/src/main/AndroidManifest.xml
+
+    - name: Force compileSdk/targetSdk 35 and set NDK 27
+      run: |
+        sed -i 's/compileSdk[ ]*=[ ]*flutter.compileSdkVersion/compileSdk = 35/' android/app/build.gradle
+        sed -i 's/compileSdkVersion flutter.compileSdkVersion/compileSdkVersion 35/' android/app/build.gradle
+        sed -i 's/targetSdk[ ]*=[ ]*flutter.targetSdkVersion/targetSdk = 35/' android/app/build.gradle
+        sed -i 's/targetSdkVersion flutter.targetSdkVersion/targetSdkVersion 35/' android/app/build.gradle
+        grep -q "ndkVersion" android/app/build.gradle || sed -i '/android {/a \    ndkVersion = "27.0.12077973"' android/app/build.gradle
+
+    - name: Configure signing
+      run: |
+        sed -i '/buildTypes {/i \    signingConfigs {\n        release {\n            keyAlias System.getenv("ALIAS")\n            keyPassword System.getenv("KEY_PASSWORD")\n            storeFile file("upload-keystore.jks")\n            storePassword System.getenv("KEY_STORE_PASSWORD")\n        }\n    }\n' android/app/build.gradle
+        sed -i 's/signingConfig signingConfigs.debug/signingConfig signingConfigs.release/' android/app/build.gradle
+
+    - name: Clean Gradle cache
+      run: rm -rf ~/.gradle/caches/transforms-3 ~/.gradle/caches/8.4 ~/.gradle/caches/8.6
+
+    - name: Build Signed APK
+      run: flutter build apk --release
+      env:
+        ALIAS: ${{ secrets.ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: sisms-photo-v1.0-signed
+        path: build/app/outputs/flutter-apk/app-release.apk
