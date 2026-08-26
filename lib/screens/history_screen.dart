@@ -43,7 +43,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             if (conv != null) {
                               conv.messages.clear();
                               conv.title = 'Новый диалог';
-                              app.notifyListeners();
+                              app.notifyChanges();
                             }
                           }
                         }

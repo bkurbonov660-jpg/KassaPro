@@ -20,7 +20,7 @@ dependencies:
   speech_to_text: ^7.0.0
   file_picker: ^8.1.2
   path_provider: ^2.1.1
-  intl: ^0.19.0
+  intl: ^0.20.2
   qr_flutter: ^4.1.0
   mobile_scanner: ^5.0.0
   share_plus: ^10.1.1
@@ -29,7 +29,7 @@ dependencies:
   # НОВЫЕ ЗАВИСИМОСТИ (исправленные)
   wifi_iot: ^0.3.0
   flutter_blue_plus: ^1.32.10
-  torch_controller: ^0.2.0
+  torch_controller: ^2.0.1
   flutter_volume_controller: ^1.0.0   # вместо volume_controller
   android_intent_plus: ^5.2.0
 

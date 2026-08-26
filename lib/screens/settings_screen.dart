@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
+import '../models/setting_item.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -111,7 +112,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const Text('Модель ИИ'),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: app.model,
+              initialValue: app.model,
               items: const [
                 DropdownMenuItem(value: 'openrouter/free', child: Text('Free Router (авто)')),
                 DropdownMenuItem(value: 'stealth/ox-alpha', child: Text('Ox Alpha (stealth)')),
@@ -208,7 +209,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         if (conv != null) {
                           conv.messages.clear();
                           conv.title = 'Новый диалог';
-                          app.notifyListeners();
+                          app.notifyChanges();
                         }
                       }
                     }
