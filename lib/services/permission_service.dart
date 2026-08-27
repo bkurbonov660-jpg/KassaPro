@@ -2,18 +2,6 @@ import 'package:permission_handler/permission_handler.dart';
 import '../models/setting_item.dart';
 
 class PermissionService {
-  static PermissionType _map(Permission p) {
-    if (p == Permission.camera) return PermissionType.camera;
-    if (p == Permission.microphone) return PermissionType.microphone;
-    if (p == Permission.contacts) return PermissionType.contacts;
-    if (p == Permission.storage) return PermissionType.storage;
-    if (p == Permission.notification) return PermissionType.notifications;
-    if (p == Permission.location) return PermissionType.location;
-    if (p == Permission.wifi) return PermissionType.wifi;
-    if (p == Permission.bluetooth) return PermissionType.bluetooth;
-    return PermissionType.storage;
-  }
-
   static List<PermissionItem> getPermissionItems() {
     return [
       PermissionItem(
@@ -45,11 +33,6 @@ class PermissionService {
         type: PermissionType.location,
         title: 'Геолокация',
         description: 'Для поиска мест',
-      ),
-      PermissionItem(
-        type: PermissionType.wifi,
-        title: 'Wi-Fi',
-        description: 'Для управления Wi-Fi',
       ),
       PermissionItem(
         type: PermissionType.bluetooth,
@@ -89,8 +72,6 @@ class PermissionService {
         return Permission.notification;
       case PermissionType.location:
         return Permission.location;
-      case PermissionType.wifi:
-        return Permission.wifi;
       case PermissionType.bluetooth:
         return Permission.bluetooth;
     }

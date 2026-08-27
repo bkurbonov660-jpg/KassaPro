@@ -5,7 +5,6 @@ enum PermissionType {
   storage,
   notifications,
   location,
-  wifi,
   bluetooth,
 }
 

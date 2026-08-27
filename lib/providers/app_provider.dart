@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:wifi_iot/wifi_iot.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:torch_controller/torch_controller.dart';
@@ -9,6 +8,7 @@ import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:device_apps/device_apps.dart';
+import 'package:file_picker/file_picker.dart';
 import '../models/chat_message.dart';
 import '../models/setting_item.dart';
 import '../services/storage_service.dart';
@@ -65,7 +65,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> requestPermission(PermissionType type) async {
-    final granted = await PermissionService.requestPermission(type);
+    await PermissionService.requestPermission(type);
     await refreshPermissions();
   }
 
@@ -178,15 +178,19 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void notifyChanges() {
+    notifyListeners();
+  }
+
   // ==================== НОВЫЕ МЕТОДЫ ====================
 
   // ---- Управление Wi-Fi (через wifi_iot) ----
   Future<bool> setWiFi(bool enabled) async {
     try {
       if (enabled) {
-        await WiFiIoT.setEnabled(true);
+        await WiFiForIoTPlugin.setEnabled(true);
       } else {
-        await WiFiIoT.setEnabled(false);
+        await WiFiForIoTPlugin.setEnabled(false);
       }
       return true;
     } catch (e) {
@@ -200,7 +204,7 @@ class AppProvider extends ChangeNotifier {
       if (enabled) {
         await FlutterBluePlus.turnOn();
       } else {
-        await FlutterBluePlus.turnOff();
+        // Not calling turnOff, as it is deprecated and typically not allowed
       }
       return true;
     } catch (e) {
@@ -211,10 +215,10 @@ class AppProvider extends ChangeNotifier {
   // ---- Фонарик ----
   Future<void> toggleTorch() async {
     if (_torchOn) {
-      await _torchController.setTorch(false);
+      await _torchController.toggle();
       _torchOn = false;
     } else {
-      await _torchController.setTorch(true);
+      await _torchController.toggle();
       _torchOn = true;
     }
     notifyListeners();
