@@ -1,0 +1,64 @@
+name: Build and Release OBAN APK
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build Release APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Scaffold Android Project
+        run: |
+          cp pubspec.yaml pubspec.yaml.bak
+          flutter create --org com.obanstudio --project-name oban_downloader --platforms android .
+          cp pubspec.yaml.bak pubspec.yaml
+          if [ -d "android_custom" ]; then
+            cp -rf android_custom/* android/
+          fi
+
+      - name: Get Dependencies
+        run: flutter pub get
+
+      - name: Compile Release APK
+        run: flutter build apk --release
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OBAN-Downloader-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: "OBAN Downloader v1.0 (Build #${{ github.run_number }})"
+          body: |
+            ### Релиз OBAN Downloader PRO
+            - Полная сборка через GitHub Actions
+            - Поддержка кнопки «Поделиться» из YouTube и TikTok
+            - Загрузка видео (MP4) и аудио (MP3 320kbps)
+            - ИИ-анализ OpenRouter API
+          files: build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
