@@ -1,0 +1,104 @@
+name: Build and Release OBAN APK
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build Release APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Scaffold Android Project & Enable Desugaring
+        run: |
+          cp pubspec.yaml pubspec.yaml.bak
+          flutter create --org com.obanstudio --project-name oban_downloader --platforms android .
+          cp pubspec.yaml.bak pubspec.yaml
+          if [ -d "android_custom" ]; then
+            cp -rf android_custom/* android/
+          fi
+
+          # Патчинг Gradle для включения coreLibraryDesugaring
+          python3 - << 'PY'
+          import os
+
+          groovy_path = "android/app/build.gradle"
+          kts_path = "android/app/build.gradle.kts"
+
+          if os.path.exists(groovy_path):
+              with open(groovy_path, "r") as f:
+                  txt = f.read()
+              if "coreLibraryDesugaring" not in txt:
+                  txt = txt.replace("compileOptions {", "compileOptions {\n        coreLibraryDesugaringEnabled true")
+                  if "defaultConfig {" in txt:
+                      txt = txt.replace("defaultConfig {", "defaultConfig {\n        multiDexEnabled true")
+                  if "dependencies {" in txt:
+                      txt = txt.replace("dependencies {", "dependencies {\n    coreLibraryDesugaring \"com.android.tools:desugar_jdk_libs:2.1.4\"")
+                  else:
+                      txt += '\ndependencies {\n    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.4"\n}\n'
+                  with open(groovy_path, "w") as f:
+                      f.write(txt)
+              print("Patched android/app/build.gradle successfully")
+
+          if os.path.exists(kts_path):
+              with open(kts_path, "r") as f:
+                  txt = f.read()
+              if "coreLibraryDesugaring" not in txt:
+                  txt = txt.replace("compileOptions {", "compileOptions {\n        isCoreLibraryDesugaringEnabled = true")
+                  if "defaultConfig {" in txt:
+                      txt = txt.replace("defaultConfig {", "defaultConfig {\n        multiDexEnabled = true")
+                  if "dependencies {" in txt:
+                      txt = txt.replace("dependencies {", "dependencies {\n    coreLibraryDesugaring(\"com.android.tools:desugar_jdk_libs:2.1.4\")")
+                  else:
+                      txt += '\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\n}\n'
+                  with open(kts_path, "w") as f:
+                      f.write(txt)
+              print("Patched android/app/build.gradle.kts successfully")
+          PY
+
+      - name: Get Dependencies
+        run: flutter pub get
+
+      - name: Compile Release APK
+        run: flutter build apk --release
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OBAN-Downloader-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v2.5.1.${{ github.run_number }}
+          name: "OBAN Downloader v2.5.1 (Build #${{ github.run_number }})"
+          body: |
+            ### Обновление OBAN Downloader v2.5.1 Pro
+            - ✅ Полностью решена ошибка сборки (Core Library Desugaring enabled)
+            - 🚀 Прямое извлечение потоков YouTube со звуком (MP4) и чистый MP3
+            - ⚡ Отображение скорости в реальном времени (МБ/с) и оставшегося времени (ETA)
+            - 🔄 Возобновление загрузки при обрыве связи (HTTP Range)
+            - 🔔 Системный прогресс-бар в шторке Android и открытие файла по клику
+            - 🪟 Режим быстрого скачивания поверх других приложений
+          files: build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
