@@ -1,0 +1,66 @@
+name: Build Release APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Recreate Android Project Skeleton (if missing)
+        run: |
+          if [ ! -f "android/build.gradle" ]; then
+            echo "Generating android native platform..."
+            flutter create --org com.kassapro --project-name kassapro --platforms android .
+          fi
+
+          # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ СЕТИ И БИОМЕТРИИ В ANDROID MANIFEST
+          sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>\n    <uses-permission android:name="android.permission.USE_BIOMETRIC"/>\n    <uses-permission android:name="android.permission.USE_FINGERPRINT"/>' android/app/src/main/AndroidManifest.xml
+
+          # Настройка FlutterFragmentActivity для корректной работы local_auth
+          find android/app/src/main/ -name "MainActivity.*" -exec sed -i 's/FlutterActivity/FlutterFragmentActivity/g' {} +
+          find android/app/src/main/ -name "MainActivity.*" -exec sed -i 's/import io.flutter.embedding.android.FlutterActivity/import io.flutter.embedding.android.FlutterFragmentActivity/g' {} +
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build APK (Release)
+        run: flutter build apk --release
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kassapro-neo-v4
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: v4.0.${{ github.run_number }}
+          name: Kassapro Neo v4.0 (Build ${{ github.run_number }})
+          files: build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
