@@ -1,0 +1,87 @@
+name: Build & Release APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Release APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Scaffold Android Project & Permissions
+        run: |
+          cp pubspec.yaml pubspec.yaml.bak
+          cp -r lib lib.bak
+
+          flutter create . --org com.smartai.ainotify --project-name smart_ai_notify --platforms android
+
+          cp pubspec.yaml.bak pubspec.yaml
+          rm -rf lib && cp -r lib.bak lib
+          rm pubspec.yaml.bak && rm -rf lib.bak
+
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST" ]; then
+            sed -i '/<manifest/a \    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>\n    <uses-permission android:name="android.permission.VIBRATE"/>\n    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>\n    <uses-permission android:name="android.permission.WAKE_LOCK"/>' "$MANIFEST"
+          fi
+
+          GRADLE_GROOVY="android/app/build.gradle"
+          GRADLE_KTS="android/app/build.gradle.kts"
+          if [ -f "$GRADLE_GROOVY" ]; then
+            sed -i '/compileOptions {/a \        coreLibraryDesugaringEnabled true' "$GRADLE_GROOVY"
+            if grep -q "dependencies {" "$GRADLE_GROOVY"; then
+              sed -i '/dependencies {/a \    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.4"' "$GRADLE_GROOVY"
+            else
+              echo -e '\ndependencies {\n    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.4"\n}' >> "$GRADLE_GROOVY"
+            fi
+          elif [ -f "$GRADLE_KTS" ]; then
+            sed -i '/compileOptions {/a \        isCoreLibraryDesugaringEnabled = true' "$GRADLE_KTS"
+            if grep -q "dependencies {" "$GRADLE_KTS"; then
+              sed -i '/dependencies {/a \    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")' "$GRADLE_KTS"
+            else
+              echo -e '\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")\n}' >> "$GRADLE_KTS"
+            fi
+          fi
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Release APK
+        run: flutter build apk --release
+
+      - name: Publish Release to GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.1.${{ github.run_number }}
+          name: "Smart AI Notify v1.1.${{ github.run_number }}"
+          body: |
+            ### 🤖 Обновление Smart AI Notify v1.1.${{ github.run_number }}
+            - Исправлены все ошибки компиляции Dart
+            - Добавлена система Избранного и быстрого копирования
+            - Добавлено создание пользовательских тем генерации
+            - Добавлен выбор стиля/характера ИИ (Учёный, Стоик, Футурист, Лаконичный)
+            - Полнотекстовое раскрытие уведомлений в шторке Android
+          draft: false
+          prerelease: false
+          files: build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
