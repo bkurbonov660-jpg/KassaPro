@@ -1,0 +1,28 @@
+name: kassapro
+description: "Kassapro — Классический учет задолженностей и заметок"
+publish_to: 'none'
+version: 4.5.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  shared_preferences: ^2.2.3
+  intl: ^0.19.0
+  uuid: ^4.4.0
+  http: ^1.2.2
+  pdf: ^3.11.1
+  printing: ^5.13.2
+  local_auth: ^2.2.0
+  image_picker: ^1.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
