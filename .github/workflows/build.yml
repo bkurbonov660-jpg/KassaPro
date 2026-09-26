@@ -1,0 +1,84 @@
+name: Build GoalFlow APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
+          channel: 'stable'
+          cache: true
+
+      - name: Create Android platform if missing
+        run: |
+          if [ ! -d "android" ]; then
+            flutter create --org com.goalflow --project-name goalflow --platforms android .
+          fi
+
+      - name: Patch AndroidManifest for notifications & internet
+        run: |
+          FILE=android/app/src/main/AndroidManifest.xml
+          if ! grep -q "POST_NOTIFICATIONS" "$FILE"; then
+            sed -i 's#<application#<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>\n    <uses-permission android:name="android.permission.INTERNET"/>\n    <application#' "$FILE"
+          fi
+
+      - name: Enable desugaring for notifications
+        run: |
+          FILE=android/app/build.gradle
+          if ! grep -q "coreLibraryDesugaringEnabled" "$FILE"; then
+            sed -i 's#compileOptions {#compileOptions {\n        coreLibraryDesugaringEnabled true#' "$FILE"
+          fi
+          if ! grep -q "desugar_jdk_libs" "$FILE"; then
+            sed -i 's#dependencies {#dependencies {\n    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.4"#' "$FILE"
+          fi
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Analyze (non-blocking)
+        run: flutter analyze --no-fatal-infos || true
+
+      - name: Build APK release
+        run: flutter build apk --release
+
+      - name: Rename APK
+        run: |
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk dist/GoalFlow-v7.apk
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GoalFlow-APK
+          path: dist/GoalFlow-v7.apk
+
+      - name: Create Release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v7.0.${{ github.run_number }}
+          name: GoalFlow v7.0.${{ github.run_number }}
+          body: |
+            Автоматическая сборка GoalFlow.
+            - 5 валют (RUB, USD, EUR, TJS, CNY)
+            - Дедлайн, рекомендации, уведомления
+            - История, архив, отчёт о деньгах
+          files: dist/GoalFlow-v7.apk
