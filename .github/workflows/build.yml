@@ -1,0 +1,101 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build & Release APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Generate Android project structure if missing
+        run: |
+          if [ ! -d "android" ]; then
+            cp pubspec.yaml pubspec.yaml.bak
+            flutter create --platforms=android --org com.kassapro --project-name kassapro .
+            cp pubspec.yaml.bak pubspec.yaml
+            rm -f pubspec.yaml.bak
+          fi
+
+      - name: Configure Android (package id, signing, INTERNET, app name)
+        run: |
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          if ! grep -q "android.permission.INTERNET" "$MANIFEST"; then
+            sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET"/>\n    <application|' "$MANIFEST"
+          fi
+          sed -i 's|android:label="[^"]*"|android:label="GoalFlow"|' "$MANIFEST"
+          python3 - << 'PY'
+          import os, re
+          p = next(f for f in ['android/app/build.gradle.kts', 'android/app/build.gradle'] if os.path.exists(f))
+          s = open(p, encoding='utf-8').read()
+          kts = p.endswith('.kts')
+          NEW_ID = 'com.bkurbonov.goalflow'
+          s = re.sub(r"applicationId\s*=?\s*['\"][^'\"]*['\"]",
+                     ('applicationId = "%s"' if kts else 'applicationId "%s"') % NEW_ID, s)
+          if os.path.exists('signing/goalflow.p12'):
+              if kts:
+                  block = ('signingConfig = signingConfigs.create("goalflow") {\n'
+                           '                storeFile = rootProject.file("../signing/goalflow.p12")\n'
+                           '                storePassword = "goalflow2026"\n'
+                           '                keyAlias = "goalflow"\n'
+                           '                keyPassword = "goalflow2026"\n'
+                           '                storeType = "pkcs12"\n'
+                           '            }')
+                  pat = r'signingConfig\s*=\s*signingConfigs\.getByName\("debug"\)'
+              else:
+                  block = ('signingConfig(signingConfigs.create("goalflow") {\n'
+                           '                storeFile = rootProject.file("../signing/goalflow.p12")\n'
+                           '                storePassword = "goalflow2026"\n'
+                           '                keyAlias = "goalflow"\n'
+                           '                keyPassword = "goalflow2026"\n'
+                           '                storeType = "pkcs12"\n'
+                           '            })')
+                  pat = r'signingConfig\s+signingConfigs\.debug'
+              s, n = re.subn(pat, lambda m: block, s)
+              print('signing patched:', n)
+          open(p, 'w', encoding='utf-8').write(s)
+          PY
+          grep -n "applicationId\|signingConfig" android/app/build.gradle* || true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Release APK
+        run: flutter build apk --release --build-number=${{ github.run_number }}
+
+      - name: Upload APK to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: goalflow-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v3.3.0-build${{ github.run_number }}
+          name: GoalFlow v3.3.0 (Build ${{ github.run_number }})
+          draft: false
+          prerelease: false
+          files: build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
