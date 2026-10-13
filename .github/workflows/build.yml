@@ -1,0 +1,80 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Flutter (stable)
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter create android (если папки нет)
+        run: |
+          if [ ! -d android ]; then
+            mkdir -p /tmp/keep
+            cp -r lib /tmp/keep/lib
+            cp pubspec.yaml /tmp/keep/pubspec.yaml
+            flutter create --org com.dorama --project-name doramapulse --platforms android .
+            rm -rf lib test pubspec.yaml
+            cp -r /tmp/keep/lib ./lib
+            cp /tmp/keep/pubspec.yaml ./pubspec.yaml
+          fi
+
+      - name: Патч AndroidManifest (интернет и название)
+        run: |
+          M=android/app/src/main/AndroidManifest.xml
+          if ! grep -q 'android.permission.INTERNET' "$M"; then
+            sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET"/>\n    <application#' "$M"
+          fi
+          sed -i 's#android:label="[^"]*"#android:label="Дорама Пульс"#' "$M"
+          grep -n 'INTERNET\|android:label' "$M"
+
+      - name: flutter pub get
+        run: flutter pub get
+
+      - name: Сборка release APK
+        env:
+          OR_KEY: ${{ secrets.OPENROUTER_KEY }}
+        run: |
+          ARGS=""
+          if [ -n "$OR_KEY" ]; then ARGS="--dart-define=OPENROUTER_KEY=$OR_KEY"; fi
+          flutter build apk --release $ARGS
+
+      - name: Переименовать APK
+        run: |
+          mkdir -p out
+          cp build/app/outputs/flutter-apk/app-release.apk "out/DoramaPulse-${{ github.run_number }}.apk"
+
+      - name: Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: DoramaPulse-apk
+          path: out/*.apk
+
+      - name: Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Дорама Пульс — сборка ${{ github.run_number }}
+          files: out/*.apk
+          make_latest: true
