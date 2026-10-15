@@ -1,0 +1,256 @@
+// Серверная сборка базы дорам (запускается в GitHub Actions).
+// Инкрементально: берёт прошлую базу из кэша, докачивает только свежие страницы
+// TVmaze, переводит только новинки и записывает assets/seed_catalog.json.
+import 'dart:convert';
+import 'dart:io';
+import 'dart:math' as math;
+import '../lib/dict.dart';
+import '../lib/models.dart';
+import '../lib/net.dart';
+import '../lib/translator.dart';
+import '../lib/tvmaze.dart';
+import '../lib/wiki.dart';
+
+class _Host implements TrHost {
+  @override final Map<int, String> custom = {};
+  @override final Map<int, String> tr = {};
+  @override final Map<int, String> trSrc = {};
+  @override final Map<int, int> tried = {};
+  final Map<int, Drama> byId;
+  _Host(this.byId);
+  @override
+  Iterable<Drama> get allDramas => byId.values;
+  @override
+  Set<int> get userIds => <int>{};
+  @override
+  void changed() {}
+}
+
+Map<int, T> _readMap<T>(dynamic raw) {
+  final out = <int, T>{};
+  if (raw is Map) {
+    raw.forEach((k, v) {
+      final i = int.tryParse(k.toString());
+      if (i != null && v is T) out[i] = v;
+    });
+  }
+  return out;
+}
+
+String _cut(String s, int n) {
+  if (s.length <= n) return s;
+  final h = s.substring(0, n);
+  final i = math.max(h.lastIndexOf('. '), math.max(h.lastIndexOf('! '), h.lastIndexOf('? ')));
+  return i > 200 ? h.substring(0, i + 1) : h;
+}
+
+Future<void> main() async {
+  final sw = Stopwatch()..start();
+  final file = File('assets/seed_catalog.json');
+  final dramas = <int, Drama>{};
+  final summaries = <int, String>{};
+  final sumRu = <int, String>{};
+  final host = _Host(dramas);
+  var prevMax = 0;
+  var fullAt = 0;
+
+  // 0. Прошлая база из кэша GitHub Actions.
+  try {
+    final m = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
+    final l = m['dramas'];
+    if (l is List && l.length > 200) {
+      for (final e in l) {
+        final d = Drama.fromJson(Map<String, dynamic>.from(e as Map));
+        dramas[d.id] = d;
+      }
+      host.tr.addAll(_readMap<String>(m['tr']));
+      host.trSrc.addAll(_readMap<String>(m['trSrc']));
+      host.tried.addAll(_readMap<int>(m['tried']));
+      sumRu.addAll(_readMap<String>(m['sum']));
+      prevMax = (m['scanMax'] ?? 0) as int;
+      fullAt = (m['fullAt'] ?? 0) as int;
+    }
+  } catch (_) {}
+  final hadPrev = dramas.isNotEmpty;
+  stdout.writeln('0/5 Прошлая база: ${dramas.length} дорам, названий ${host.tr.length}, описаний ${sumRu.length}');
+
+  final nowMs = DateTime.now().millisecondsSinceEpoch;
+  final full = !hadPrev || prevMax <= 0 || nowMs - fullAt > 10 * 86400000;
+
+  // 1. Каталог TVmaze.
+  stdout.writeln('1/5 Каталог TVmaze (${full ? "полный" : "только свежие страницы"})…');
+  var maxPage = -1;
+  var page = full ? 0 : math.max(0, prevMax - 4);
+  var finished = false;
+  var fails = 0;
+  var scanned = 0;
+  while (!finished && page < 1500) {
+    final batch = [page, page + 1, page + 2];
+    final res = await Future.wait(batch.map((p) =>
+        Net.get(Uri.parse('${Tvmaze.base}/shows?page=$p'), retries: 3)));
+    for (var i = 0; i < res.length; i++) {
+      final r = res[i];
+      if (r.code == 404) { finished = true; break; }
+      if (r.code != 200 || r.data is! List) {
+        fails++;
+        if (fails > 6) { finished = true; break; }
+        continue;
+      }
+      maxPage = batch[i];
+      scanned++;
+      for (final x in r.data as List) {
+        final d = Tvmaze.parse(x, minYear: 0);
+        if (d == null) continue;
+        dramas[d.id] = d;
+        if (!sumRu.containsKey(d.id) && x is Map && x['summary'] is String) {
+          final t = Tvmaze.stripHtml(x['summary'] as String);
+          if (t.isNotEmpty) summaries[d.id] = t;
+        }
+      }
+    }
+    page += 3;
+    await Net.sleep(1200);
+    if (sw.elapsed > const Duration(minutes: 12)) break;
+  }
+  if (maxPage < 0) maxPage = prevMax;
+  stdout.writeln('   страниц загружено: $scanned, дорам в базе: ${dramas.length}');
+  if (dramas.length < 200) {
+    stdout.writeln('Каталог не загрузился — оставляем прежний seed.');
+    exit(0);
+  }
+
+  // 2. Дорамы из Википедии, которых ещё нет в TVmaze.
+  stdout.writeln('2/5 Новые и анонсированные дорамы из Wikidata…');
+  try {
+    final rows = await Wiki.announced(DateTime.now().year - 3, limit: 1500)
+        .timeout(const Duration(minutes: 3));
+    if (rows != null) {
+      final byImdb = <String, int>{};
+      final byName = <String, int>{};
+      for (final d in dramas.values) {
+        if (d.id < 0) continue;
+        if (d.imdb.isNotEmpty) byImdb[d.imdb] = d.id;
+        byName[nk(d.en)] = d.id;
+      }
+      // Заглушки, которые уже появились в TVmaze, убираем.
+      for (final d in dramas.values.toList()) {
+        if (d.id >= 0) continue;
+        final real = (d.imdb.isNotEmpty ? byImdb[d.imdb] : null) ?? byName[nk(d.en)];
+        if (real != null) {
+          final ru = host.tr[d.id];
+          if (ru != null && !host.tr.containsKey(real)) {
+            host.tr[real] = ru;
+            host.trSrc[real] = host.trSrc[d.id] ?? 'wiki';
+          }
+          dramas.remove(d.id);
+          host.tr.remove(d.id);
+          host.trSrc.remove(d.id);
+        }
+      }
+      final today = DateTime.now().toIso8601String().substring(0, 10);
+      var added = 0;
+      for (final r in rows) {
+        final en = (r['en'] ?? '').toString();
+        if (en.isEmpty) continue;
+        final im = (r['im'] ?? '').toString();
+        final key = nk(en);
+        if ((im.isNotEmpty && byImdb.containsKey(im)) || byName.containsKey(key)) continue;
+        final id = -(r['q'] as int);
+        final date = (r['date'] ?? '').toString();
+        final year = date.length >= 4 ? int.tryParse(date.substring(0, 4)) : null;
+        final ru = (r['ru'] ?? '').toString();
+        final ex = dramas[id];
+        if (ex == null) {
+          if (added >= 700) continue;
+          dramas[id] = Drama(
+            id: id, en: en, year: year, date: date, country: 'KR', imdb: im,
+            status: date.isNotEmpty && date.compareTo(today) > 0 ? 'Announced' : 'Ended',
+          );
+          added++;
+        }
+        if (hasCyr(ru) && dictLookup(en) == null && !host.tr.containsKey(id)) {
+          host.tr[id] = ru;
+          host.trSrc[id] = 'wiki';
+        }
+      }
+      stdout.writeln('   добавлено из Wikidata: $added');
+    } else {
+      stdout.writeln('   Wikidata не ответил — пропускаем');
+    }
+  } catch (e) {
+    stdout.writeln('   Wikidata пропущена: $e');
+  }
+
+  // 3. Названия: переводим только то, чего ещё нет.
+  stdout.writeln('3/5 Переводим новые названия…');
+  final translator = Translator(host);
+  var prevLeft = -1;
+  for (var r = 0; r < 3 && sw.elapsed < const Duration(minutes: 20); r++) {
+    try {
+      await translator.run().timeout(const Duration(minutes: 8));
+    } catch (e) {
+      stdout.writeln('   перевод прерван: $e');
+    }
+    stdout.writeln('   осталось без точного названия: ${translator.left}');
+    if (translator.left == 0 || translator.left == prevLeft) break;
+    prevLeft = translator.left;
+  }
+
+  // 4. Описания: только для тех, у кого ещё нет перевода.
+  stdout.writeln('4/5 Переводим новые описания…');
+  final todo = dramas.values.where((d) => summaries.containsKey(d.id) && !sumRu.containsKey(d.id)).toList();
+  todo.sort((a, b) => b.date.compareTo(a.date));
+  final limited = todo.take(900).toList();
+  var idx = 0;
+  var gtxFails = 0;
+  var okCount = 0;
+  Future<void> worker() async {
+    while (idx < limited.length && gtxFails < 12 && sw.elapsed < const Duration(minutes: 28)) {
+      final d = limited[idx++];
+      final text = _cut(summaries[d.id]!, 700);
+      final t = await Translator.gtx(text);
+      if (t == null) { gtxFails++; await Net.sleep(1500); continue; }
+      gtxFails = 0;
+      sumRu[d.id] = t;
+      okCount++;
+      await Net.sleep(200);
+    }
+  }
+  await Future.wait([worker(), worker(), worker()]);
+  stdout.writeln('   новых описаний переведено: $okCount из ${limited.length}');
+
+  // 5. Запись.
+  stdout.writeln('5/5 Пишем assets/seed_catalog.json…');
+  final trOut = <String, String>{};
+  final srcOut = <String, String>{};
+  final triedOut = <String, int>{};
+  for (final d in dramas.values) {
+    final ru = host.tr[d.id];
+    if (ru != null && dictLookup(d.en) == null) {
+      trOut['${d.id}'] = ru;
+      srcOut['${d.id}'] = host.trSrc[d.id] ?? 'wiki';
+    }
+    final t = host.tried[d.id];
+    if (t != null) triedOut['${d.id}'] = t;
+  }
+  final sumOut = <String, String>{};
+  sumRu.forEach((id, t) { if (dramas.containsKey(id)) sumOut['$id'] = t; });
+  final list = dramas.values.toList();
+  list.sort((a, b) => b.date.compareTo(a.date));
+  final out = <String, dynamic>{
+    'v': 1,
+    'built': DateTime.now().toUtc().toIso8601String().substring(0, 16),
+    'scanMax': maxPage,
+    'fullAt': full ? nowMs : fullAt,
+    'dramas': list.map((d) => d.toJson()).toList(),
+    'tr': trOut,
+    'trSrc': srcOut,
+    'tried': triedOut,
+    'sum': sumOut,
+  };
+  file.writeAsStringSync(jsonEncode(out));
+  stdout.writeln('Готово: дорам ${list.length}, названий ${trOut.length}, '
+      'описаний ${sumOut.length}, ${(file.lengthSync() / 1024).round()} КБ, '
+      '${sw.elapsed.inMinutes} мин');
+  exit(0);
+}
