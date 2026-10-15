@@ -6,7 +6,7 @@ SRC=assets/icon/icon.png
 IM=$(command -v magick || command -v convert || true)
 if [ -z "$IM" ]; then echo "::warning::ImageMagick не найден - остаётся стандартная иконка"; exit 0; fi
 
-valid() { [ -s "$1" ] && head -c 4 "$1" | grep -aq PNG; }
+valid() { [ -s "$1" ]; }
 
 if ! valid "$SRC"; then
   rm -f "$SRC"
