@@ -25,6 +25,7 @@ class _HomePageState extends State<HomePage> {
   int day = 0;
   int mood = -1;
   int shuffle = 1;
+  bool showHelpBanner = true;
   static const List<String> _wd = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
   String _label(int i) {
@@ -88,6 +89,47 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ]),
                 const SizedBox(height: 12),
+                if (showHelpBanner)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
+                    decoration: BoxDecoration(
+                      color: C.s1,
+                      border: Border.all(color: C.line),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(top: 2),
+                          child: Icon(Icons.auto_awesome_rounded, color: C.pk, size: 22),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Мы активно развиваем приложение!',
+                                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: C.tx),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'Просим прощения, если пока не все названия дорам переведены точно. В следующих обновлениях мы обязательно всё это исправим и сделаем приложение ещё удобнее! А пока любое название можно поправить вручную внутри карточки дорамы.',
+                                style: TextStyle(color: C.tx2, fontSize: 12.5, height: 1.35),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () => setState(() => showHelpBanner = false),
+                          icon: const Icon(Icons.close_rounded, color: C.tx2, size: 18),
+                        ),
+                      ],
+                    ),
+                  ),
                 if (store.scanning)
                   Padding(padding: const EdgeInsets.only(bottom: 10),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
