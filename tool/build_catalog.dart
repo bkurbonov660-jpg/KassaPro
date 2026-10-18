@@ -109,8 +109,8 @@ Future<void> main() async {
       }
     }
     page += 3;
-    await Net.sleep(1200);
-    if (sw.elapsed > const Duration(minutes: 12)) break;
+    await Net.sleep(450);
+    if (sw.elapsed > const Duration(minutes: 22)) break;
   }
   if (maxPage < 0) maxPage = prevMax;
   stdout.writeln('   страниц загружено: $scanned, дорам в базе: ${dramas.length}');
@@ -190,11 +190,11 @@ Future<void> main() async {
   for (final d in dramas.values.toList()) {
     if (d.id >= 0 || d.imdb.isEmpty) continue;
     if (((host.tried[d.id] ?? 0) & 64) != 0) continue;
-    if (lookups >= 350 || sw.elapsed > const Duration(minutes: 16)) break;
+    if (lookups >= 950 || sw.elapsed > const Duration(minutes: 16)) break;
     lookups++;
     host.tried[d.id] = (host.tried[d.id] ?? 0) | 64;
     final j = await Tvmaze.showByImdb(d.imdb);
-    await Net.sleep(550);
+    await Net.sleep(200);
     if (j == null) continue;
     final real = Tvmaze.parse(j, minYear: 0, forceKR: true);
     if (real == null) continue;

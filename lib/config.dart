@@ -1,6 +1,6 @@
 class Cfg {
   static const String appName = 'Дорама Пульс';
-  static const int scanDepth = 60;
+  static const int scanDepth = 180;
   static const int minYear = 2022;
   // Ветка data в этом же репозитории: туда сервер раз в 2 дня кладёт свежую переведённую базу.
   static const String dataBase = 'https://raw.githubusercontent.com/bkurbonov660-jpg/KassaPro/data';

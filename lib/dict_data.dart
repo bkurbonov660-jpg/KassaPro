@@ -61,7 +61,7 @@ const List<List<String>> kDict = [
   ['Kingdom', 'Королевство'],
   ['Hellbound', 'Обречённые на ад'],
   ['Sweet Home', 'Милый дом'],
-  ['The Uncanny Counter', 'Контратака'],
+  ['The Uncanny Counter', 'Чудесный слух (Контратака)'],
   ['The 8 Show', 'Шоу восьми'],
   ['Guardian: The Lonely and Great God', 'Гоблин'],
   ['Descendants of the Sun', 'Потомки солнца'],
@@ -104,6 +104,6 @@ const List<List<String>> kDict = [
   ['Playful Kiss', 'Озорной поцелуй'],
   ['You\'re Beautiful', 'Ты прекрасен'],
   ['City Hunter', 'Городской охотник'],
-  ['The Uncanny Counter 2', 'Контратака 2'],
+  ['The Uncanny Counter 2: Counter Punch|The Uncanny Counter 2', 'Чудесный слух 2'],
   ['The Good Bad Mother', 'Хорошая плохая мать'],
 ];
