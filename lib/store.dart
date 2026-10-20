@@ -629,6 +629,24 @@ class Store extends ChangeNotifier implements TrHost {
   }
 
   // ── Дорамы 2026: встроенный список, расписание TVmaze за каждый день года, поиск настоящих записей ──
+  final Map<String, List<String>> aliasByTitle = <String, List<String>>{};
+  final Map<String, String> _keyByAlias = <String, String>{};
+
+  // Канонический ключ дорамы: по основному или второму названию.
+  String keyOf(Drama d) {
+    final k = nk(d.en);
+    return _keyByAlias[k] ?? k;
+  }
+
+  void _applyRu(Drama d, String ru) {
+    if (ru.isEmpty) return;
+    final c = custom[d.id];
+    if (c != null && c.isNotEmpty) return;
+    if (tr[d.id] == ru && trSrc[d.id] == 'fix') return;
+    tr[d.id] = ru;
+    trSrc[d.id] = 'fix';
+  }
+
   void seed2026() {
     final byName = <String, Drama>{};
     for (final d in allDramas) {
@@ -644,36 +662,87 @@ class Store extends ChangeNotifier implements TrHost {
       final net = p[1].trim();
       final date = p[2].trim();
       final stc = p[3].trim();
-      if (p.length > 4 && p[4].trim().isNotEmpty) {
-        castByTitle[key] = p[4].split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+      final cast = p.length > 4 ? p[4].trim() : '';
+      final ru = p.length > 5 ? p[5].trim() : '';
+      final al = p.length > 6
+          ? p[6].split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList()
+          : <String>[];
+      if (cast.isNotEmpty) {
+        castByTitle[key] = cast.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+      }
+      final names = <String>[...al];
+      if (ru.isNotEmpty) names.add(ru);
+      if (names.isNotEmpty) aliasByTitle[key] = names;
+      for (final a in al) {
+        final k2 = nk(a);
+        if (k2.isNotEmpty) _keyByAlias[k2] = key;
       }
       final year = date.length >= 4 ? int.tryParse(date.substring(0, 4)) : null;
-      final ex = byName[key];
+      final future = date.compareTo(todayIso()) > 0;
+      final status = stc == 'O' ? 'Running' : (stc == 'A' || future ? 'Announced' : 'Ended');
+      var ex = byName[key];
+      if (ex == null) {
+        for (final a in al) {
+          final k2 = nk(a);
+          if (k2.isNotEmpty && byName.containsKey(k2)) {
+            ex = byName[k2];
+            break;
+          }
+        }
+        if (ex != null && ex.id < 0) {
+          ex.en = en;
+          byName[key] = ex;
+        }
+      }
       if (ex != null) {
-        if (ex.network.isEmpty) ex.network = net;
-        if (ex.date.isEmpty) {
+        if (ex.id < 0) {
+          if (net.isNotEmpty) ex.network = net;
           ex.date = date;
           ex.year = year;
+          ex.status = status;
+        } else {
+          if (ex.network.isEmpty) ex.network = net;
+          if (ex.date.isEmpty) {
+            ex.date = date;
+            ex.year = year;
+          }
         }
+        _applyRu(ex, ru);
         continue;
       }
       final id = -(2000000000 + (int.parse(_fnv(key), radix: 16) % 90000000));
       if (catalog.containsKey(id)) continue;
-      final future = date.compareTo(todayIso()) > 0;
-      final status = stc == 'O' ? 'Running' : (stc == 'A' || future ? 'Announced' : 'Ended');
       final d = Drama(id: id, en: en, year: year, date: date, country: 'KR', status: status, network: net);
       catalog[id] = d;
       byName[key] = d;
+      _applyRu(d, ru);
       added = true;
     }
-    if (added) {
-      _dedupeAnnounced();
-      _allCache = null;
-      changed();
+    // Если настоящая запись TVmaze называется иначе (второе название), переносим в неё списки пользователя.
+    for (final e in aliasByTitle.entries) {
+      final neg = byName[e.key];
+      if (neg == null || neg.id >= 0) continue;
+      for (final a in e.value) {
+        final real = byName[nk(a)];
+        if (real != null && real.id >= 0) {
+          _moveId(neg.id, real.id);
+          catalog.remove(neg.id);
+          byName[e.key] = real;
+          added = true;
+          break;
+        }
+      }
     }
+    _dedupeAnnounced();
+    _allCache = null;
+    if (added) changed();
   }
 
-  List<String> castOf(Drama d) => castByTitle[nk(d.en)] ?? const <String>[];
+  List<String> castOf(Drama d) {
+    final k = nk(d.en);
+    final c = castByTitle[k] ?? castByTitle[_keyByAlias[k] ?? ''];
+    return c ?? const <String>[];
+  }
 
   Drama _upsertQuiet(Drama d) {
     final ex = catalog[d.id];

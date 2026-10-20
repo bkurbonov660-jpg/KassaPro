@@ -170,12 +170,15 @@ class Taste {
     }
     final ql = q.trim().toLowerCase();
     final hitKeys = <String>[];
+    store.aliasByTitle.forEach((k, al) {
+      if (al.any((n) => n.toLowerCase().contains(ql))) hitKeys.add(k);
+    });
     store.castByTitle.forEach((k, names) {
       if (names.any((n) => n.toLowerCase().contains(ql))) hitKeys.add(k);
     });
     if (hitKeys.isNotEmpty) {
       for (final d in store.allDramas) {
-        if (d.country == 'KR' && hitKeys.contains(nk(d.en)) && seen.add(d.id)) out.add(d);
+        if (d.country == 'KR' && hitKeys.contains(store.keyOf(d)) && seen.add(d.id)) out.add(d);
       }
     }
     out.sort((a, b) => b.date.compareTo(a.date));
