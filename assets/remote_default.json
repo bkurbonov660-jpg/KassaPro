@@ -1,0 +1,21 @@
+{
+  "notice": {
+    "id": "",
+    "title": "",
+    "text": ""
+  },
+  "fix": {
+    "titles": {},
+    "posters": {},
+    "summaries": {},
+    "actorRu": {},
+    "actorPhotos": {},
+    "cast": {},
+    "dramasByActor": {},
+    "awards": {}
+  },
+  "config": {
+    "scanDepth": 0,
+    "notifyHour": 10
+  }
+}
