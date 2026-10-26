@@ -1,0 +1,388 @@
+{
+  "notice": {
+    "id": "upd_2026_10_25_love_in_disguise_v33",
+    "title": "Обновление базы Дорама Пульс (245+ дорам)",
+    "text": "Мы обновили базу данных приложения:\n• Обновлены фотографии и роли актёров в дораме «Любовь под прикрытием» (Love in Disguise): Им Си Ван (Юн И Джун), Соль Ин А (Кан Джэ Хи), Ким Джон Хён (Ким Си Хён), Ёну / Ли Да Бин (Ли Хе Джон) и весь актёрский состав.\n• Добавлена полная фильмография (все 16 дорам Ёну, все дорамы Ким Джон Хёна, Им Си Вана, Соль Ин А) и все премии.\n• Включены системные уведомления в телефон о выходе обновлений базы и добавлении новых дорам."
+  },
+  "fix": {
+    "titles": {
+      "Love in Disguise": "Любовь под прикрытием",
+      "My Guilty Human": "Любовь под прикрытием",
+      "Naui Yujoeingan": "Любовь под прикрытием",
+      "Take Charge of My Heart": "Подзаряди меня",
+      "Can This Love Be Translated?": "Можно ли перевести эту любовь?",
+      "We Are All Trying Here": "Все мы стараемся здесь",
+      "Resident Playbook": "Ординаторская мудрость",
+      "Boyhood": "Отрочество",
+      "Twinkling Watermelon": "Мерцающий арбуз",
+      "Iron Family": "Железная семья",
+      "The Tale of Lady Ok": "История леди Ок",
+      "Dog Knows Everything": "Пёс знает всё",
+      "Tempted": "Великий соблазнитель",
+      "The Great Seducer": "Великий соблазнитель",
+      "The Liar and His Lover": "Лжец и его возлюбленная",
+      "Dinner Mate": "Поужинаем вместе?"
+    },
+    "posters": {
+      "Love in Disguise": "https://upload.wikimedia.org/wikipedia/en/thumb/d/d4/Love_in_Disguise_%28TV_series%29_poster.png/250px-Love_in_Disguise_%28TV_series%29_poster.png",
+      "Can This Love Be Translated?": "https://upload.wikimedia.org/wikipedia/en/thumb/1/1d/Can_This_Love_Be_Translated%3F_Poster.png/250px-Can_This_Love_Be_Translated%3F_Poster.png",
+      "Take Charge of My Heart": "https://upload.wikimedia.org/wikipedia/en/thumb/0/0c/Take_Charge_of_My_Heart_poster.png/250px-Take_Charge_of_My_Heart_poster.png"
+    },
+    "summaries": {
+      "Love in Disguise": "Юн И Джун (Им Си Ван) — наследник корпорации Taegang Group в третьем поколении, который закрывается в собственном особняке после того, как становится главным подозреваемым в загадочном убийстве своего бывшего секретаря. Чтобы раскрыть громкое дело изнутри, детектив полиции и бывший боец спецназа Кан Джэ Хи (Соль Ин А) переодевается мужчиной и устраивается к И Джуну личным секретарём и телохранителем под прикрытием. Вместе с лучшим другом и юристом корпорации Ким Си Хёном (Ким Джон Хён) и секретарём председателя Ли Хе Джон (Ёну) герои оказываются втянуты в опасную игру интриг, где между подозреваемым чеболем и детективом под прикрытием вспыхивают настоящие чувства."
+    },
+    "actorRu": {
+      "Yim Si-wan": "Им Си Ван",
+      "Im Si-wan": "Им Си Ван",
+      "Lim Si-wan": "Им Си Ван",
+      "Seol In-ah": "Соль Ин А",
+      "Seol In-a": "Соль Ин А",
+      "Kim Jung-hyun": "Ким Джон Хён",
+      "Yeonwoo": "Ёну (Ли Да Бин)",
+      "Lee Da-bin": "Ёну (Ли Да Бин)",
+      "Kim In-kwon": "Ким Ин Гвон",
+      "Choi Jin-ho": "Чхве Джин Хо",
+      "Hong Eun-hee": "Хон Ын Хи",
+      "Park Ah-in": "Пак А Ин",
+      "Ryu Seung-soo": "Рю Сын Су",
+      "Park Jun-myeon": "Пак Джун Мён",
+      "Kim Ki-bang": "Ким Ги Бан",
+      "Kim Do-yoon": "Ким До Юн",
+      "Jung Yoo-min": "Чон Ю Мин",
+      "Choi Hee-jin": "Чхве Хи Джин",
+      "Jeong Han-seol": "Чон Хан Соль"
+    },
+    "actorPhotos": {
+      "Yim Si-wan": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/241209_Yim_Siwan_%28%EC%9E%84%EC%8B%9C%EC%99%84%29.png/250px-241209_Yim_Siwan_%28%EC%9E%84%EC%8B%9C%EC%99%84%29.png",
+      "Seol In-ah": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Seol_In-ah_in_September_2024.png/250px-Seol_In-ah_in_September_2024.png",
+      "Kim Jung-hyun": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Yokohama_International_Film_Festival_2024_Kim_Jung_Hyun_%2853869008061%29.jpg/250px-Yokohama_International_Film_Festival_2024_Kim_Jung_Hyun_%2853869008061%29.jpg",
+      "Yeonwoo": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/180506_%EB%AA%A8%EB%AA%A8%EB%9E%9C%EB%93%9C_%EC%84%9C%EB%93%A0%EC%96%B4%ED%83%9D_%ED%8C%AC%EB%AF%B8%ED%8C%85_%284%29_%28cropped%29.jpg/250px-180506_%EB%AA%A8%EB%AA%A8%EB%9E%9C%EB%93%9C_%EC%84%9C%EB%93%A0%EC%96%B4%ED%83%9D_%ED%8C%AC%EB%AF%B8%ED%8C%85_%284%29_%28cropped%29.jpg",
+      "Kim In-kwon": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Kim_In-kwon_in_September_2024.png/250px-Kim_In-kwon_in_September_2024.png",
+      "yeonwoo": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Yeonwoo_at_Lotte_World_Fan_signing_on_March_23%2C_2019_%282%29.jpg",
+      "leedabin": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Yeonwoo_at_Lotte_World_Fan_signing_on_March_23%2C_2019_%282%29.jpg",
+      "kimjunghyun": "https://upload.wikimedia.org/wikipedia/commons/3/30/Kim_Junghyun_in_March_2022_%281%29.jpg"
+    },
+    "cast": {
+      "Love in Disguise": [
+        {
+          "name": "Yim Si-wan",
+          "ru": "Им Си Ван",
+          "role": "Юн И Джун (наследник Taegang Group)",
+          "photo": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/241209_Yim_Siwan_%28%EC%9E%84%EC%8B%9C%EC%99%84%29.png/250px-241209_Yim_Siwan_%28%EC%9E%84%EC%8B%9C%EC%99%84%29.png"
+        },
+        {
+          "name": "Seol In-ah",
+          "ru": "Соль Ин А",
+          "role": "Кан Джэ Хи (детектив / секретарь под прикрытием)",
+          "photo": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Seol_In-ah_in_September_2024.png/250px-Seol_In-ah_in_September_2024.png"
+        },
+        {
+          "name": "Kim Jung-hyun",
+          "ru": "Ким Джон Хён",
+          "role": "Ким Си Хён (юрист Taegang Group, друг И Джуна)",
+          "photo": "https://upload.wikimedia.org/wikipedia/commons/3/30/Kim_Junghyun_in_March_2022_%281%29.jpg"
+        },
+        {
+          "name": "Yeonwoo",
+          "ru": "Ёну (Ли Да Бин)",
+          "role": "Ли Хе Джон (секретарь председателя)",
+          "photo": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Yeonwoo_at_Lotte_World_Fan_signing_on_March_23%2C_2019_%282%29.jpg"
+        },
+        {
+          "name": "Kim In-kwon",
+          "ru": "Ким Ин Гвон",
+          "role": "Пак Бон И (глава спецгруппы следствия)",
+          "photo": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Kim_In-kwon_in_September_2024.png/250px-Kim_In-kwon_in_September_2024.png"
+        },
+        {
+          "name": "Choi Jin-ho",
+          "ru": "Чхве Джин Хо",
+          "role": "Юн Тхэ Сик (председатель Taegang Group)",
+          "photo": ""
+        },
+        {
+          "name": "Hong Eun-hee",
+          "ru": "Хон Ын Хи",
+          "role": "Юн Ми Джин (старшая сестра И Джуна)",
+          "photo": ""
+        },
+        {
+          "name": "Park Ah-in",
+          "ru": "Пак А Ин",
+          "role": "Юн На Джон (вторая сестра И Джуна)",
+          "photo": ""
+        },
+        {
+          "name": "Ryu Seung-soo",
+          "ru": "Рю Сын Су",
+          "role": "Кан Сок Гу (отец Джэ Хи)",
+          "photo": ""
+        },
+        {
+          "name": "Park Jun-myeon",
+          "ru": "Пак Джун Мён",
+          "role": "Чо Сук Джа (мать Джэ Хи)",
+          "photo": ""
+        },
+        {
+          "name": "Kim Ki-bang",
+          "ru": "Ким Ги Бан",
+          "role": "Чон Ван Гу (сержант следственной группы)",
+          "photo": ""
+        }
+      ]
+    },
+    "dramasByActor": {
+      "yimsiwan": [
+        "Love in Disguise",
+        "Squid Game 3",
+        "Squid Game",
+        "Boyhood",
+        "Summer Strike",
+        "Tracer",
+        "Run On",
+        "Strangers From Hell",
+        "The King in Love",
+        "Misaeng: Incomplete Life",
+        "Triangle",
+        "Moon Embracing the Sun",
+        "Man from the Equator",
+        "Mantis",
+        "Road to Boston",
+        "Unlocked",
+        "Emergency Declaration",
+        "The Merciless",
+        "The Attorney"
+      ],
+      "seolinah": [
+        "Love in Disguise",
+        "Oh My Ghost Clients",
+        "Twinkling Watermelon",
+        "Oasis",
+        "Celebrity",
+        "Business Proposal",
+        "Mr. Queen",
+        "Record of Youth",
+        "Beautiful Love, Wonderful Life",
+        "Special Labor Inspector",
+        "Sunny Again Tomorrow",
+        "School 2017",
+        "Strong Woman Do Bong Soon",
+        "Emergency Declaration"
+      ],
+      "kimjunghyun": [
+        "Love in Disguise",
+        "Siren's Kiss",
+        "A Hundred Memories",
+        "Iron Family",
+        "Kokdu: Season of Deity",
+        "Mr. Queen",
+        "Crash Landing on You",
+        "Time",
+        "Welcome to Waikiki",
+        "School 2017",
+        "The Rebel",
+        "Don't Dare to Dream"
+      ],
+      "yeonwoo": [
+        "Love in Disguise",
+        "My Bias, My Boss",
+        "Love Phobia",
+        "The Tale of Lady Ok",
+        "Dog Knows Everything",
+        "Bitter Sweet Hell",
+        "Numbers",
+        "The Golden Spoon",
+        "Dali & Cocky Prince",
+        "Cheat on Me If You Can",
+        "Live On",
+        "Alice",
+        "Touch",
+        "Pegasus Market",
+        "Tempted",
+        "The Liar and His Lover"
+      ],
+      "kiminkwon": [
+        "Love in Disguise",
+        "The Haunted Palace",
+        "The Judge from Hell",
+        "Parasyte: The Grey",
+        "Heartbeat",
+        "Kokdu: Season of Deity",
+        "The King's Affection",
+        "Mr. Queen"
+      ]
+    },
+    "awards": {
+      "yimsiwan": [
+        {
+          "y": "2026",
+          "a": "Премия Korea First Brand Awards — Лучший актёр OTT (Корея и Вьетнам) + номинация Asia Artist Awards",
+          "w": "За мировое признание в сериале «Игра в кальмара 2–3» (Squid Game) и главную роль в дораме «Любовь под прикрытием» (Love in Disguise)"
+        },
+        {
+          "y": "2024",
+          "a": "3-я премия Blue Dragon Series Awards — Лучший актёр (главная мужская роль)",
+          "w": "За блестящее перевоплощение в роли Чан Бён Тхэ в комедийной дораме «Отрочество» (Boyhood)"
+        },
+        {
+          "y": "2024",
+          "a": "15-я премия Korea Drama Awards — Высшая награда за мастерство (Top Excellence Award, актёр)",
+          "w": "За главную роль Чан Бён Тхэ в хитовой дораме «Отрочество» (Boyhood)"
+        },
+        {
+          "y": "2024",
+          "a": "Премия Marie Claire Asia Star Awards (BIFF) — Награда «Beyond Cinema Award» + номинация 60-й Baeksang Arts Awards «Лучший актёр ТВ»",
+          "w": "За главную роль в сериале «Отрочество» (Boyhood)"
+        },
+        {
+          "y": "2023",
+          "a": "14-я премия Корейской популярной культуры и искусств — Почётная грамота Министра культуры, спорта и туризма РК",
+          "w": "Государственная награда за выдающийся вклад в развитие корейского кино и телевидения"
+        },
+        {
+          "y": "2022",
+          "a": "31-я премия Buil Film Awards и 9-я премия Ассоциации кинопродюсеров Кореи — Лучший актёр второго плана",
+          "w": "За пугающе достоверную роль биотеррориста Рю Джин Сока в фильме-катастрофе «Чрезвычайная ситуация» (Emergency Declaration)"
+        },
+        {
+          "y": "2017",
+          "a": "1-я премия The Seoul Awards — Награда за популярность (актёр)",
+          "w": "За главную роль полицейского под прикрытием Чо Хён Су в криминальном боевике «Безжалостный» (The Merciless), показанном в Каннах"
+        },
+        {
+          "y": "2015",
+          "a": "51-я премия Baeksang Arts Awards — Лучший новый актёр (ТВ)",
+          "w": "За культовую главную роль стажёра Чан Гы Рэ в дораме «Мисэн: Неудавшаяся жизнь» (Misaeng: Incomplete Life)"
+        },
+        {
+          "y": "2015",
+          "a": "4-я премия APAN Star Awards, 9-я Cable TV Broadcasting Awards и 8-я Korea Drama Awards — Лучший актёр мини-сериала и Спецприз жюри",
+          "w": "За главную роль в социальном феномене «Мисэн: Неудавшаяся жизнь»"
+        },
+        {
+          "y": "2014",
+          "a": "35-я премия Blue Dragon Film Awards и 51-я премия Grand Bell Awards — Награда за популярность + Лучший новый актёр (Max Movie Awards)",
+          "w": "За дебют в большом кино — роль студента Пак Джин У в исторической драме «Адвокат» (The Attorney)"
+        },
+        {
+          "y": "2014",
+          "a": "MBC Drama Awards — Лучший новый актёр",
+          "w": "За роль Чан Дон У / Юн Ян Ха в драме «Треугольник» (Triangle)"
+        }
+      ],
+      "seolinah": [
+        {
+          "y": "2026",
+          "a": "Премия Korea First Brand Awards — Лучшая артистка-мультиэнтертейнер + номинация 62-й Baeksang Arts Awards",
+          "w": "За яркие роли в дораме «Любовь под прикрытием» (Love in Disguise) и спортивном реалити «Железные девушки» (Iron Girls)"
+        },
+        {
+          "y": "2023",
+          "a": "KBS Drama Awards — Награда за мастерство (актриса мини-сериала), Награда за популярность и Лучшая пара",
+          "w": "За главные роли О Джон Шин в исторической драме «Оазис» (Oasis) и Чхве Се Гён / Он Ын Ю в хите «Мерцающий арбуз» (Twinkling Watermelon)"
+        },
+        {
+          "y": "2022",
+          "a": "SBS Drama Awards — Награда «Лучшая пара» (с Ким Мин Гю) + номинация «Награда за мастерство»",
+          "w": "За роль харизматичной наследницы Джин Ён Со в мегахите «Деловое предложение» (Business Proposal)"
+        },
+        {
+          "y": "2022",
+          "a": "Премия Brand of the Year Awards — Восходящая звезда года (актриса)",
+          "w": "За всенародную любовь зрителей после выхода дорамы «Деловое предложение» и фильма «Чрезвычайная ситуация»"
+        },
+        {
+          "y": "2019",
+          "a": "KBS Drama Awards — Награда за мастерство (актриса длинного сериала)",
+          "w": "За главную роль Ким Чхон А в дораме «Любовь прекрасна, жизнь чудесна» (Beautiful Love, Wonderful Life)"
+        },
+        {
+          "y": "2018",
+          "a": "KBS Drama Awards — Лучшая новая актриса + номинация 55-й Baeksang Arts Awards «Лучшая новая актриса ТВ»",
+          "w": "За первую главную роль Кан Ха Ни в мелодраме «Завтра тоже солнечно» (Sunny Again Tomorrow)"
+        },
+        {
+          "y": "2017",
+          "a": "MBC Entertainment Awards — Лучший новичок года (шоу и ситкомы)",
+          "w": "За работу телеведущей в программе «Section TV»"
+        }
+      ],
+      "kimjunghyun": [
+        {
+          "y": "2024",
+          "a": "KBS Drama Awards — Высшая награда за мастерство (Top Excellence Award, актёр), Лучшая пара и номинация на Гран-при (Дэсан)",
+          "w": "За главную роль Со Кан Джу в хитовой семейной комедии «Железная семья» (Iron Family)"
+        },
+        {
+          "y": "2024",
+          "a": "10-я премия APAN Star Awards — Номинация «Высшая награда за мастерство (актёр сериала)»",
+          "w": "За главную роль в дораме «Железная семья» (Iron Family)"
+        },
+        {
+          "y": "2021",
+          "a": "7-я премия APAN Star Awards — Номинация «Лучший актёр второго плана»",
+          "w": "За яркую роль Ку Сын Джуна (Альберто Ку) в мировом хите «Аварийная посадка любви» (Crash Landing on You) и главную роль короля Чхольджона в «Королеве Чорин» (Mr. Queen)"
+        },
+        {
+          "y": "2017",
+          "a": "MBC Drama Awards — Лучший новый актёр",
+          "w": "За роль Мо Ри в исторической драме «Бунтарь Хон Гиль Дон» (The Rebel)"
+        },
+        {
+          "y": "2017",
+          "a": "54-я Baeksang Arts Awards, KBS Drama Awards и 1-я The Seoul Awards — Номинации «Лучший новый актёр (ТВ)»",
+          "w": "За главную мужскую роль бунтаря Хён Тхэ Уна в молодёжной дораме «Школа 2017» (School 2017)"
+        },
+        {
+          "y": "2016",
+          "a": "25-я премия Buil Film Awards и 22-я Chunsa Film Art Awards — Номинации «Лучший новый актёр (кино)»",
+          "w": "За дебютную главную роль гимнаста До Хёна в независимой драме «Сверхчеловек» (Overman)"
+        }
+      ],
+      "yeonwoo": [
+        {
+          "y": "2024",
+          "a": "KBS Drama Awards — Награда за мастерство (актриса мини-сериала) и Лучшая пара",
+          "w": "За роль офицера полиции Хон Чхо Вон в детективно-комедийной дораме «Пёс знает всё» (Dog Knows Everything)"
+        },
+        {
+          "y": "2024",
+          "a": "MBC Drama Awards — Номинация «Награда за мастерство (актриса мини-сериала)»",
+          "w": "За яркую роль Ли Се На в чёрной комедии «Наш дом» (Bitter Sweet Hell) и роль Чха Ми Рён в «Истории леди Ок» (The Tale of Lady Ok)"
+        },
+        {
+          "y": "2023",
+          "a": "MBC Drama Awards — Номинация «Награда за мастерство (актриса мини-сериала)»",
+          "w": "За главную роль старшего менеджера Джин Ён А в дораме «Числа» (Numbers)"
+        },
+        {
+          "y": "2022",
+          "a": "MBC Drama Awards — Лучшая новая актриса",
+          "w": "За роль амбициозной О Ё Джин в мистической драме «Золотая ложка» (The Golden Spoon)"
+        }
+      ],
+      "kiminkwon": [
+        {
+          "y": "2024",
+          "a": "SBS Drama Awards — Лучший актёр второго плана / Scene Stealer",
+          "w": "За колоритную роль помощника судьи Гу Ман До в фантастическом хите «Судья из ада» (The Judge from Hell)"
+        },
+        {
+          "y": "2012",
+          "a": "3-я премия KOFRA Film Awards — Лучший актёр второго плана",
+          "w": "За выдающееся перевоплощение в военной драме «Мой путь» (My Way)"
+        },
+        {
+          "y": "2009",
+          "a": "18-я премия Buil Film Awards — Лучший актёр второго плана",
+          "w": "За яркую роль в фильме-катастрофе «Приливная волна» (Haeundae)"
+        }
+      ]
+    }
+  },
+  "config": {
+    "scanDepth": 220,
+    "notifyHour": 10
+  }
+}
