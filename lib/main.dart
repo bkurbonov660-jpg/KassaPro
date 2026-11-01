@@ -1,0 +1,206 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'catalog_page.dart';
+import 'config.dart';
+import 'extras_ui.dart';
+import 'home_page.dart';
+import 'mine_page.dart';
+import 'profile_page.dart';
+import 'store.dart';
+import 'ui_common.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+    systemNavigationBarColor: C.s1,
+  ));
+  await store.loadLocal();
+  runApp(const DoramaApp());
+  store.init();
+}
+
+class DoramaApp extends StatelessWidget {
+  const DoramaApp({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final base = ThemeData.dark(useMaterial3: true);
+    return MaterialApp(
+      title: Cfg.appName,
+      debugShowCheckedModeBanner: false,
+      theme: base.copyWith(
+        scaffoldBackgroundColor: C.bg,
+        textTheme: base.textTheme.apply(bodyColor: C.tx, displayColor: C.tx),
+        colorScheme: const ColorScheme.dark(
+          primary: C.pk,
+          onPrimary: C.onPk,
+          secondary: C.pk,
+          secondaryContainer: C.pk,
+          onSecondaryContainer: C.onPk,
+          surface: C.s1,
+          onSurface: C.tx,
+          onSurfaceVariant: C.tx2,
+        ),
+        snackBarTheme: const SnackBarThemeData(backgroundColor: C.s2, contentTextStyle: TextStyle(color: C.tx)),
+        navigationBarTheme: const NavigationBarThemeData(
+          backgroundColor: C.s1,
+          indicatorColor: C.pk,
+          height: 68,
+        ),
+      ),
+      builder: (context, child) {
+        final mq = MediaQuery.of(context);
+        final s = mq.textScaler.scale(1.0).clamp(0.9, 1.1).toDouble();
+        return MediaQuery(
+          data: mq.copyWith(textScaler: TextScaler.linear(s)),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
+      home: const Shell(),
+    );
+  }
+}
+
+class Shell extends StatefulWidget {
+  const Shell({super.key});
+  @override
+  State<Shell> createState() => _ShellState();
+}
+
+class _ShellState extends State<Shell> with WidgetsBindingObserver {
+  int tab = 0;
+  bool _popupShownThisSession = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    store.addListener(_onStoreChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkUpdatePopup());
+  }
+
+  void _onStoreChanged() {
+    if (!_popupShownThisSession && store.updatePopupVisible) {
+      _checkUpdatePopup();
+    }
+  }
+
+  void _checkUpdatePopup() {
+    if (_popupShownThisSession || !mounted) return;
+    if (store.updatePopupVisible) {
+      _popupShownThisSession = true;
+      Future<void>.delayed(const Duration(milliseconds: 450), () {
+        if (!mounted) return;
+        showAppUpdateDialog(context, markDismissed: true);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    store.removeListener(_onStoreChanged);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive || state == AppLifecycleState.detached) {
+      store.flush(all: state != AppLifecycleState.inactive);
+    }
+    if (state == AppLifecycleState.resumed) {
+      final lu = store.lastUpdate;
+      if (lu == null || DateTime.now().difference(lu).inMinutes >= 5) store.refresh();
+    }
+  }
+
+  Widget _navItem(int idx, IconData icon, String label) {
+    final active = tab == idx;
+    const activeCol = Color(0xFFE59A43);
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => tab = idx),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 23, color: active ? activeCol : C.tx2),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+                  color: active ? activeCol : C.tx2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: IndexedStack(
+        index: tab,
+        children: const [
+          HomePage(),
+          CatalogPage(),
+          MinePage(),
+          ProfilePage(),
+        ],
+      ),
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          color: C.s1,
+          border: Border(top: BorderSide(color: C.line, width: 0.8)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 66,
+            child: Row(
+              children: [
+                _navItem(0, Icons.home_rounded, 'Главная'),
+                _navItem(1, Icons.grid_view_rounded, 'Каталог'),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => tab = 1),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE59A43),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.search_rounded, color: Color(0xFF16111D), size: 25),
+                        ),
+                        const SizedBox(height: 2),
+                        const Text(
+                          'Поиск',
+                          style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: C.tx2),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                _navItem(2, Icons.playlist_play_rounded, 'Мои дорамы'),
+                _navItem(3, Icons.person_outline_rounded, 'Профиль'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
