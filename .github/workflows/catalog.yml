@@ -1,0 +1,109 @@
+name: Update catalog
+
+on:
+  schedule:
+    - cron: '0 3 */2 * *'
+  push:
+    branches: [ main ]
+    paths:
+      - 'tool/build_catalog.dart'
+      - 'lib/**'
+      - '.github/workflows/catalog.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: catalog
+  cancel-in-progress: false
+
+jobs:
+  catalog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Flutter stable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Keep signing key cache alive
+        uses: actions/cache/restore@v4
+        with:
+          path: android/app/dorama-release.jks
+          key: dorama-release-key-v1
+
+      - name: Cache translated catalog
+        uses: actions/cache@v4
+        with:
+          path: assets/seed_catalog.json
+          key: seed-${{ github.run_id }}
+          restore-keys: |
+            seed-
+
+      - name: pub get
+        run: flutter pub get
+
+      - name: Build catalog
+        timeout-minutes: 60
+        env:
+          OR_KEY: ${{ secrets.OPENROUTER_KEY }}
+        run: |
+          DEFS=""
+          if [ -n "$OR_KEY" ]; then DEFS="-DOPENROUTER_KEY=$OR_KEY"; fi
+          dart run $DEFS tool/build_catalog.dart
+          ls -la assets/seed_catalog.json
+
+      - name: Publish to data branch (only if new episodes, dramas, or news exist)
+        run: |
+          python3 - << 'PY_META'
+          import hashlib, json, sys, urllib.request
+          d = json.load(open('assets/seed_catalog.json'))
+          dramas = d.get('dramas', [])
+          if len(dramas) < 200:
+              sys.exit('catalog too small')
+          # Вычисляем отпечаток контента (без поля built), чтобы проверить, изменились ли реально дорамы, серии или переводы
+          payload = json.dumps({
+              'dramas': dramas,
+              'tr': d.get('tr', {}),
+              'sum': d.get('sum', {}),
+          }, sort_keys=True, ensure_ascii=False).encode('utf-8')
+          h = hashlib.sha256(payload).hexdigest()[:16]
+          d['hash'] = h
+          json.dump(d, open('assets/seed_catalog.json', 'w'), ensure_ascii=False)
+          json.dump({'built': d['built'], 'count': len(dramas), 'hash': h}, open('/tmp/meta.json', 'w'))
+          print(f"Catalog count={len(dramas)}, content_hash={h}")
+          PY_META
+          mkdir -p /tmp/pub
+          cp assets/seed_catalog.json /tmp/pub/catalog.json
+          cp /tmp/meta.json /tmp/pub/meta.json
+          if [ -f /tmp/actors_awards.json ]; then
+            cp /tmp/actors_awards.json /tmp/pub/actors_awards.json
+          fi
+          if [ -f assets/remote_default.json ]; then
+            cp assets/remote_default.json /tmp/pub/remote.json
+          elif curl -fsSL --retry 2 --max-time 60 -o /tmp/remote.json "https://raw.githubusercontent.com/${{ github.repository }}/data/remote.json" && python3 -c "import json; json.load(open('/tmp/remote.json'))"; then
+            cp /tmp/remote.json /tmp/pub/remote.json
+          else
+            echo '{"notice":"","fix":{"titles":{},"summaries":{}},"config":{}}' > /tmp/pub/remote.json
+          fi
+          # Проверяем старый meta.json и remote.json в ветке data: если нет новых серий/дорам и новость не менялась — пропускаем обновление!
+          if curl -fsSL --retry 2 --max-time 30 -o /tmp/old_meta.json "https://raw.githubusercontent.com/${{ github.repository }}/data/meta.json" 2>/dev/null &&              curl -fsSL --retry 2 --max-time 30 -o /tmp/old_remote.json "https://raw.githubusercontent.com/${{ github.repository }}/data/remote.json" 2>/dev/null; then
+            if python3 -c "import json,sys; m1=json.load(open('/tmp/old_meta.json')); m2=json.load(open('/tmp/meta.json')); r1=json.load(open('/tmp/old_remote.json')); r2=json.load(open('/tmp/pub/remote.json')); sys.exit(0 if m1.get('hash')==m2.get('hash') and m1.get('hash','')!='' and r1==r2 else 1)"; then
+              echo "Новых дорам, серий или новостей нет — пропускаем обновление базы."
+              exit 0
+            fi
+          fi
+          cat /tmp/pub/meta.json
+          cd /tmp/pub
+          git init -q -b data
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          git add .
+          git commit -qm "catalog $(date -u +%F)"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" data
